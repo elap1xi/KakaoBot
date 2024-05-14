@@ -13,6 +13,7 @@ async function get(url){
 
 app.post('/menu', async (req, res) => {
     var DTE = new Date();
+    DTE.setHours(DTE.getHours() + 9);
     var Year = String(DTE.getFullYear());
     var Month = String(DTE.getMonth()+1); Month = Month.length==1 ? `0${Month}` : Month;
     var Day = (DTE.getDate()); Day = Day.length==1 ? `0${Day}` : Day;
@@ -58,6 +59,7 @@ app.post('/menu', async (req, res) => {
                 'date':MLSV_YMD_f
             });
         } catch(error) {
+            console.log(error);
             res.json({
                 'menu':"알수 없는 에러가 발생했어요.\n잠시후 다시 시도해 주세요.",
                 'menu_cal':"",
