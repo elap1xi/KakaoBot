@@ -115,19 +115,17 @@ app.post('/weather', async (req, res) => {
         res.json({
             'reply' : `${location}\n기온은 ${T1H}℃ (${Sky}) 강수량은 ${Rain}${Pty}, 습도는 ${Humidity}입니다`,
         });
+        return;
 
     } catch {
         res.json({
             'reply':"에러가 발생했어요.\n잠시후 다시 시도해 주세요."
         });
+        return;
     }
 });
 
 app.post('/menu', async (req, res) => {
-    const r = req.body;
-    var bot_id = r['bot']['id'];
-    let school_code;
-    if (bot_id == '6632d764f912bc07fe305bf3') school_code = '7480093'; // 대현
     var DTE = new Date();
     DTE.setHours(DTE.getHours() + 9);
     var Year = String(DTE.getFullYear());
@@ -144,12 +142,13 @@ app.post('/menu', async (req, res) => {
             'menu_cal': "",
             'date': MLSV_YMD_f
         });
-    } else {
-        let url = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&pIndex=1&pSize=100&KEY=${apiToken_neis}&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=${school_code}&MLSV_YMD=${MLSV_YMD}`;
+        return;
 
-        var json;
+    } else {
+        let url = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&pIndex=1&pSize=100&KEY=${apiToken_neis}&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480093&MLSV_YMD=${MLSV_YMD}`;
+
         try {
-            json = await get(url);
+            var json = await get(url);
             let menu_row, menu_cal;
             if ((json.mealServiceDietInfo[1].row).length > 1) {
                 for (let i = 0; i < (json.mealServiceDietInfo[1].row).length; i++) {
@@ -164,23 +163,25 @@ app.post('/menu', async (req, res) => {
             }
 
             menu_row = String(menu_row)
-                .replace(/[<br/>]/g, '-')
-                .replace(/-----/gi, '\n')
-                .replace(/[(.*[0-9)]/gi, '')
-                .replace(/자율/gi, ' (자율)');
+            .replace(/[<br/>]/g, '-')
+            .replace(/-----/gi, '\n')
+            .replace(/[(.*[0-9)]/gi, '')
+            .replace(/자율/gi, ' (자율)');
 
             res.json({
                 'menu': menu_row,
                 'menu_cal': menu_cal,
                 'date': MLSV_YMD_f
             });
+            return;
+
         } catch (error) {
-            console.log(error);
             res.json({
                 'menu': "에러가 발생했어요.\n잠시후 다시 시도해 주세요.",
                 'menu_cal': "",
                 'date': MLSV_YMD_f
             });
+            return;
         }
     }
 });
