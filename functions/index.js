@@ -28,11 +28,19 @@ async function weather(url) {
 }
 
 app.post('/score', (req, res) => {
-    let person = Number(req.body['action']['params']['person']);
-    res.json({
-        'reply': `1등급 : 1등 - ${Math.round(person*0.04)}등\n 2등급 : ${Math.round(person*0.04)+1}등 - ${Math.round(person*0.11)}등\n3등급 : ${Math.round(person*0.11)+1}등 - ${Math.round(person*0.23)}등\n4등급 : ${Math.round(person*0.23)+1}등 - ${Math.round(person*0.4)}등\n5등급 : ${Math.round(person*0.4)+1}등 - ${Math.round(person*0.6)}등\n6등급 : ${Math.round(person*0.6)+1}등 - ${Math.round(person*0.77)}등\n7등급 : ${Math.round(person*0.77)+1}등 - ${Math.round(person*0.89)}등\n8등급 : ${Math.round(person*0.89)+1}등 - ${Math.round(person*0.96)}등\n9등급 : ${Math.round(person*0.96)+1}등 - ${person}등`
-    });
-    return;
+    try{
+        let person = Number(req.body['action']['params']['person']);
+        res.json({
+            'reply': `1등급 : 1등 - ${Math.round(person*0.04)}등\n 2등급 : ${Math.round(person*0.04)+1}등 - ${Math.round(person*0.11)}등\n3등급 : ${Math.round(person*0.11)+1}등 - ${Math.round(person*0.23)}등\n4등급 : ${Math.round(person*0.23)+1}등 - ${Math.round(person*0.4)}등\n5등급 : ${Math.round(person*0.4)+1}등 - ${Math.round(person*0.6)}등\n6등급 : ${Math.round(person*0.6)+1}등 - ${Math.round(person*0.77)}등\n7등급 : ${Math.round(person*0.77)+1}등 - ${Math.round(person*0.89)}등\n8등급 : ${Math.round(person*0.89)+1}등 - ${Math.round(person*0.96)}등\n9등급 : ${Math.round(person*0.96)+1}등 - ${person}등`
+        });
+        return; 
+    } catch {
+        res.json({
+            'reply': '학생수를 정확하게 입력해 주세요'
+        });
+        return;
+    }
+    
 });
 
 app.post('/weather', async (req, res) => {
