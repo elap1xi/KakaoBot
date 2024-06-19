@@ -2,8 +2,10 @@ const { onRequest } = require("firebase-functions/v2/https");
 
 require("dotenv").config();
 const axios = require('axios');
+const cheerio = require("cheerio");
 const express = require('express');
 const app = express();
+const fs = require('fs');
 const location = require('./src/location');
 
 const apiToken_neis = process.env.TOKENNEIS;
@@ -26,6 +28,35 @@ async function weather(url) {
     catch { return "ERR"; }
     return data;
 }
+
+app.post('/chart', async (req, res) => {
+    var chart__ = fs.readFileSync("data/cache/melon_chart.txt", "utf8");
+    fs.writeFileSync('data/cache/melon_chart.txt', '\n', 'utf8');
+    try{
+        const r = await axios.get('https://smu.melon.com/chart/index.htm');
+        const $ = cheerio.load(r.data);
+        $("tbody tr").each((i, e) => {
+            if(i+1>=11) return;
+            let data = `${i+1}위 : ${$(e).find(".ellipsis.rank01").text().trim()} - ${$(e).find(".ellipsis.rank02 .checkEllipsis").text().trim()}`;
+            fs.appendFileSync('data/cache/melon_chart.txt', data+'\n', 'utf8');
+        });
+        let chart_check = fs.readFileSync("data/cache/melon_chart.txt", "utf8");
+        if(chart_check=="\n"){
+            fs.writeFileSync('data/cache/melon_chart.txt', chart__, 'utf8');
+        }
+        res.json({
+            'reply': fs.readFileSync("data/cache/melon_chart.txt", "utf8")
+        })
+    } catch(error) {
+        let chart_check = fs.readFileSync("data/cache/melon_chart.txt", "utf8");
+        if(chart_check=="\n"){
+            fs.writeFileSync('data/cache/melon_chart.txt', chart__, 'utf8');
+        }
+        res.json({
+            'reply': '에러가 발생했어요'
+        });
+    }
+});
 
 app.post('/score', (req, res) => {
     try{
