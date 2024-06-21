@@ -140,7 +140,6 @@ async function weather(url) {
     async function parse(url) {
         let json = axios.get(url)
             .then(res => res.data)
-            .catch(error => { console.log(error); })
         return json;
     }
     let json = await parse(url);
