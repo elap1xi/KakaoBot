@@ -11,23 +11,85 @@ const location = require('./src/location');
 const apiToken_neis = process.env.TOKENNEIS;
 const apiToken_data = process.env.TOKENDATA;
 
-async function get(url) {
-    return await axios.get(url).then(res => res.data);
+async function get_shop(query) {
+    return await axios.get(`https://openapi.naver.com/v1/search/shop.json?query=`+encodeURI(query)+`&display=100&start=1&sort=sim&exclue=used:rental`, {
+        headers: {
+            'X-Naver-Client-Id' : process.env.XNAVERID,
+            'X-Naver-Client-Secret' : process.env.XNAVERSECRET
+        }
+    }).then(res => res.data);
 }
 
-async function weather(url) {
-    async function parse(url) {
-        let json = axios.get(url)
-            .then(res => res.data)
-            .catch(error => { console.log(error); })
-        return json;
+app.post('/shopping', async(req, res) => {
+    let goods = req.body['action']['params']['goods'];
+    console.log(process.env.XNAVERID);
+    console.log(goods);
+    let data = await get_shop(goods);
+
+    if(data.items.length==0){
+        res.json({
+            'reply':"Nah"
+        });
     }
-    let json = await parse(url);
-    var data;
-    try { data = json.response.body.items.item; } 
-    catch { return "ERR"; }
-    return data;
-}
+    var filtered_item = [];
+    for(let i=0; i<100; i++){
+        try{
+            if(data.items[i].mallName=="네이버"){
+                if((data.items[i].title).indexOf("대여")==-1){
+                    if((data.items[i].brand)!==''){
+                        filtered_item.push(data.items[i]);
+                    }
+                }
+            }
+        } catch {
+            filtered_item.push(data.items[0]);
+        }
+    }
+
+    async function frmt(json) {
+        let title = (json.title).replace(/<b>/gi,'').replace(/<\/b>/gi,'');
+        let url = json.link;
+        let url_img = json.image;
+        let lprice = json.lprice;
+        let hprice = json.hprice;
+        let mall;
+        try{ mall = json.mallName; } catch { mall = '-'; }
+        lprice = lprice == '' ? "-" : lprice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        hprice = hprice == '' ? "-" : hprice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        console.log(title, url, lprice);
+        res.json(
+            {
+                "version": "2.0",
+                "template": {
+                  "outputs": [
+                    {
+                      "basicCard": {
+                        "title": title,
+                        "description": `${json.category1} > ${json.category2} > ${json.category3}\n| 상품 최저가 : ${lprice}원 | 판매처:${mall}`,
+                        "thumbnail": {
+                          "imageUrl": url_img
+                        },
+                        "buttons": [
+                          {
+                            "action": "webLink",
+                            "label": "상품 바로가기",
+                            "webLinkUrl": url
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+        );
+    }
+
+    if(filtered_item.length==0){
+        frmt(data.items[0]);
+    } else {
+        frmt(filtered_item[0]);
+    }
+});
 
 app.post('/chart', async (req, res) => {
     var chart__ = fs.readFileSync("data/cache/melon_chart.txt", "utf8");
@@ -73,6 +135,20 @@ app.post('/score', (req, res) => {
     }
     
 });
+
+async function weather(url) {
+    async function parse(url) {
+        let json = axios.get(url)
+            .then(res => res.data)
+            .catch(error => { console.log(error); })
+        return json;
+    }
+    let json = await parse(url);
+    var data;
+    try { data = json.response.body.items.item; } 
+    catch { return "ERR"; }
+    return data;
+}
 
 app.post('/weather', async (req, res) => {
     let content = req.body['action']['params']['location'];
@@ -171,6 +247,10 @@ app.post('/weather', async (req, res) => {
         return;
     }
 });
+
+async function get(url) {
+    return await axios.get(url).then(res => res.data);
+}
 
 app.post('/menu', async (req, res) => {
     var DTE = new Date();
