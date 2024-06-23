@@ -51,28 +51,37 @@ app.post('/shopping', async(req, res) => {
         let url = json.link;
         let url_img = json.image;
         let lprice = json.lprice;
-        let hprice = json.hprice;
         let mall;
         try{ mall = json.mallName; } catch { mall = '-'; }
-        lprice = lprice == '' ? "-" : lprice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        hprice = hprice == '' ? "-" : hprice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        console.log(title, url, lprice);
+        // lprice = lprice == '' ? "-" : lprice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        // hprice = hprice == '' ? "-" : hprice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         res.json(
             {
                 "version": "2.0",
                 "template": {
                   "outputs": [
                     {
-                      "basicCard": {
+                      "commerceCard": {
                         "title": title,
-                        "description": `${json.category1} > ${json.category2} > ${json.category3}\n| 상품 최저가 : ${lprice}원 | 판매처:${mall}`,
-                        "thumbnail": {
-                          "imageUrl": url_img
+                        "description": `${json.category1} > ${json.category2} > ${json.category3}`,
+                        "price": lprice,
+                        "currency": "won",
+                        "thumbnails": [
+                          {
+                            "imageUrl": url_img,
+                            "link": {
+                              "web": url
+                            }
+                          }
+                        ],
+                        "profile": {
+                          "imageUrl": "https://blog.bizspring.co.kr/wp-content/uploads/2019/11/naver_shopping.png",
+                          "nickname": mall
                         },
                         "buttons": [
                           {
+                            "label": "구매하기",
                             "action": "webLink",
-                            "label": "상품 바로가기",
                             "webLinkUrl": url
                           }
                         ]
@@ -81,7 +90,7 @@ app.post('/shopping', async(req, res) => {
                   ]
                 }
               }
-        );
+        )
     }
 
     if(filtered_item.length==0){
